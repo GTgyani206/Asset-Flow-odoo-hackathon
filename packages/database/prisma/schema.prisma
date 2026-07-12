@@ -1,0 +1,263 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  ADMIN
+  ASSET_MANAGER
+  DEPARTMENT_HEAD
+  EMPLOYEE
+}
+
+enum AssetState {
+  AVAILABLE
+  ALLOCATED
+  RESERVED
+  UNDER_MAINTENANCE
+  LOST
+  RETIRED
+  DISPOSED
+}
+
+enum AllocationStatus {
+  ACTIVE
+  RETURNED
+}
+
+enum MaintenanceStatus {
+  SUBMITTED
+  APPROVED
+  IN_REPAIR
+  COMPLETED
+  REJECTED
+}
+
+enum AuditCycleStatus {
+  DRAFT
+  ACTIVE
+  CLOSED
+}
+
+model Tenant {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users               User[]
+  departments        Department[]
+  locations          Location[]
+  assetCategories    AssetCategory[]
+  assets             Asset[]
+  allocations        Allocation[]
+  resources          Resource[]
+  bookings           Booking[]
+  maintenanceRequests MaintenanceRequest[]
+  auditCycles        AuditCycle[]
+  auditRecords       AuditRecord[]
+  activityLogs       ActivityLog[]
+  outboxEvents       OutboxEvent[]
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(EMPLOYEE)
+  tenantId     String
+  tenant       Tenant   @relation(fields: [tenantId], references: [id])
+  name         String
+  departmentId String?
+  department   Department? @relation("DepartmentEmployees", fields: [departmentId], references: [id])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  version      Int      @default(1) // Optimistic concurrency control
+
+  managedDepartments Department[]         @relation("DepartmentManager")
+  allocations        Allocation[]
+  bookings           Booking[]
+  maintenanceRequested MaintenanceRequest[] @relation("Requester")
+  auditCyclesAudited   AuditCycle[]        @relation("Auditor")
+  activityLogs       ActivityLog[]
+}
+
+model Department {
+  id        String   @id @default(uuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  name      String
+  managerId String?
+  manager   User?    @relation("DepartmentManager", fields: [managerId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  employees   User[]       @relation("DepartmentEmployees")
+  allocations Allocation[]
+}
+
+model Location {
+  id        String   @id @default(uuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  assets Asset[]
+}
+
+model AssetCategory {
+  id        String   @id @default(uuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  assets Asset[]
+}
+
+model Asset {
+  id           String     @id @default(uuid())
+  tenantId     String
+  tenant       Tenant     @relation(fields: [tenantId], references: [id])
+  name         String
+  serialNumber String?
+  categoryId   String
+  category     AssetCategory @relation(fields: [categoryId], references: [id])
+  locationId   String
+  location     Location   @relation(fields: [locationId], references: [id])
+  status       AssetState @default(AVAILABLE)
+  version      Int        @default(1) // Optimistic concurrency control
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  allocations         Allocation[]
+  maintenanceRequests MaintenanceRequest[]
+  auditRecords        AuditRecord[]
+
+  @@unique([tenantId, serialNumber])
+}
+
+model Allocation {
+  id           String           @id @default(uuid())
+  tenantId     String
+  tenant       Tenant           @relation(fields: [tenantId], references: [id])
+  assetId      String
+  asset        Asset            @relation(fields: [assetId], references: [id])
+  employeeId   String?
+  employee     User?            @relation(fields: [employeeId], references: [id])
+  departmentId String?
+  department   Department?      @relation(fields: [departmentId], references: [id])
+  status       AllocationStatus @default(ACTIVE)
+  allocatedAt  DateTime         @default(now())
+  returnedAt   DateTime?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  // Double allocation is prevented by index:
+  // Partial unique index unique_active_asset_allocation ON "Allocation" ("assetId") WHERE status = 'ACTIVE'
+  // defined via raw SQL migration.
+}
+
+model Resource {
+  id        String   @id @default(uuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  name      String
+  type      String   // E.g., CONFERENCE_ROOM, VEHICLE, PROJECTOR
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bookings Booking[]
+}
+
+model Booking {
+  id         String   @id @default(uuid())
+  tenantId   String
+  tenant     Tenant   @relation(fields: [tenantId], references: [id])
+  resourceId String
+  resource   Resource @relation(fields: [resourceId], references: [id])
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  startTime  DateTime
+  endTime    DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Overlapping bookings are prevented by exclusion constraint:
+  // no_overlapping_bookings EXCLUDE USING gist (resourceId WITH =, tsrange("startTime", "endTime") WITH &&)
+  // defined via raw SQL migration.
+}
+
+model MaintenanceRequest {
+  id          String            @id @default(uuid())
+  tenantId    String
+  tenant      Tenant            @relation(fields: [tenantId], references: [id])
+  assetId     String
+  asset       Asset             @relation(fields: [assetId], references: [id])
+  requesterId String
+  requester   User              @relation("Requester", fields: [requesterId], references: [id])
+  status      MaintenanceStatus @default(SUBMITTED)
+  description String
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+}
+
+model AuditCycle {
+  id                String           @id @default(uuid())
+  tenantId          String
+  tenant            Tenant           @relation(fields: [tenantId], references: [id])
+  name              String
+  status            AuditCycleStatus @default(DRAFT)
+  assignedAuditorId String
+  assignedAuditor   User             @relation("Auditor", fields: [assignedAuditorId], references: [id])
+  startDate         DateTime
+  endDate           DateTime
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  records AuditRecord[]
+}
+
+model AuditRecord {
+  id               String   @id @default(uuid())
+  tenantId         String
+  tenant           Tenant   @relation(fields: [tenantId], references: [id])
+  auditCycleId     String
+  auditCycle       AuditCycle @relation(fields: [auditCycleId], references: [id])
+  assetId          String
+  asset            Asset    @relation(fields: [assetId], references: [id])
+  discrepancyFound Boolean  @default(false)
+  notes            String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model ActivityLog {
+  id        String   @id @default(uuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  action    String
+  details   Json
+  createdAt DateTime @default(now())
+
+  // Note: Append-only log. The application service must never update or delete from this table.
+}
+
+model OutboxEvent {
+  id          String    @id @default(uuid())
+  tenantId    String
+  tenant      Tenant    @relation(fields: [tenantId], references: [id])
+  eventType   String
+  payload     Json
+  createdAt   DateTime  @default(now())
+  processedAt DateTime?
+}
