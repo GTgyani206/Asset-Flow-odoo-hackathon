@@ -1,9 +1,10 @@
-import './globals.css';
-import type { Metadata } from 'next';
+import "@/styles/globals.css";
+import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: 'AssetFlow | Enterprise Asset & Resource Management',
-  description: 'Manage physical assets, resource bookings, and maintenance cycles in a multi-tenant ERP platform.',
+  title: "AssetFlow | Enterprise Asset & Resource Management",
+  description:
+    "Multi-tenant platform for managing physical assets, resource bookings, maintenance, and audit cycles.",
 };
 
 export default function RootLayout({
@@ -13,11 +14,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
-        <div className="bg-glow bg-glow-top-left" />
-        <div className="bg-glow bg-glow-bottom-right" />
-        {children}
-      </body>
+      <body>{children}</body>
     </html>
   );
 }

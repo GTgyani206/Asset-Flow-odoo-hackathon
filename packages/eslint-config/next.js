@@ -1,9 +1,7 @@
+/** @type {import("eslint").Linter.Config} */
 module.exports = {
-  extends: [
-    'next/core-web-vitals',
-    'plugin:@typescript-eslint/recommended'
-  ],
+  extends: [require.resolve("./base.js"), "next/core-web-vitals"],
   rules: {
-    '@typescript-eslint/no-unused-vars': ['error', { "argsIgnorePattern": "^_" }],
-  }
+    "@next/next/no-html-link-for-pages": "off",
+  },
 };

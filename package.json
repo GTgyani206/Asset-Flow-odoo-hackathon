@@ -1,22 +1,35 @@
 {
-  "name": "asset-flow",
+  "name": "assetflow",
   "private": true,
-  "version": "1.0.0",
-  "description": "Enterprise Asset & Resource Management System",
+  "version": "0.0.1",
+  "description": "Enterprise Asset & Resource Management System – monorepo root",
   "scripts": {
+    "dev": "turbo run dev --parallel",
     "build": "turbo run build",
-    "dev": "turbo run dev",
     "lint": "turbo run lint",
-    "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\"",
-    "test": "turbo run test",
+    "format": "prettier --write \"**/*.{ts,tsx,js,cjs,mjs,json,md,yaml,css}\" --ignore-path .gitignore",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,cjs,mjs,json,md,yaml,css}\" --ignore-path .gitignore",
     "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:unit": "turbo run test:unit",
+    "test:integration": "turbo run test:integration",
+    "test:e2e": "turbo run test:e2e",
     "db:generate": "turbo run db:generate",
-    "db:migrate": "turbo run db:migrate:deploy"
+    "db:migrate": "pnpm --filter @assetflow/database migrate:deploy",
+    "db:reset": "pnpm --filter @assetflow/database migrate:reset",
+    "infra:up": "docker compose -f docker-compose.yml up -d",
+    "infra:down": "docker compose -f docker-compose.yml down"
   },
   "devDependencies": {
-    "prettier": "^3.2.5",
-    "turbo": "^1.13.0",
-    "typescript": "^5.4.5"
+    "@assetflow/eslint-config": "workspace:*",
+    "@assetflow/typescript-config": "workspace:*",
+    "prettier": "^3.3.2",
+    "turbo": "^2.0.6",
+    "typescript": "^5.5.2"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
   },
   "packageManager": "pnpm@9.1.0"
 }

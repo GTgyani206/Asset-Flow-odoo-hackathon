@@ -1,7 +1,5 @@
 # Dependency directories
 node_modules/
-jspm_packages/
-web_modules/
 
 # Build outputs
 dist/
@@ -10,24 +8,29 @@ build/
 out/
 .turbo/
 
-# Debug and log files
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
-*.log
+# Prisma generated client
+packages/database/src/generated/
 
-# Environment variables
+# Environment files – never commit real secrets
 .env
 .env.local
-.env.development.local
-.env.test.local
-.env.production.local
-.env.lock
+.env.*.local
 
-# IDE and System files
+# Test & coverage
+coverage/
+.nyc_output/
+test-results/
+playwright-report/
+.playwright/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# OS & IDE
 .DS_Store
+Thumbs.db
 .idea/
 .vscode/
 *.suo
@@ -36,11 +39,8 @@ lerna-debug.log*
 *.sln
 *.sw?
 
-# Testing
-coverage/
-.nyc_output/
-.playwright/
-test-results/
-
-# Prisma
-/packages/database/src/generated/
+# Terraform state – never commit
+infra/terraform/.terraform/
+infra/terraform/*.tfstate
+infra/terraform/*.tfstate.backup
+infra/terraform/*.tfvars

@@ -1,5 +1,7 @@
 {
   "name": "@assetflow/typescript-config",
-  "version": "1.0.0",
-  "private": true
+  "version": "0.0.1",
+  "private": true,
+  "description": "Shared TypeScript configuration bases for the AssetFlow monorepo",
+  "files": ["*.json"]
 }
