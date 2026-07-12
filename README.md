@@ -31,21 +31,21 @@ Any contributor adding new features must ensure they do not introduce logic that
 
 ## Current Implementation Status
 
-The project is currently in the **Scaffolding and Infrastructure Bootstrap** phase.
+The project is currently moving from **Scaffolding and Infrastructure Bootstrap** into **Phase 1: Core Integrity Product**. The executable two-phase completion plan is tracked in [`docs/implementation/TWO_PHASE_COMPLETION_PLAN.md`](./docs/implementation/TWO_PHASE_COMPLETION_PLAN.md).
 
 | Feature Area | Status | Description |
 |---|---|---|
 | **Monorepo Foundation** | **Implemented** | Turborepo configuration, pnpm workspaces, and ESLint/TypeScript shared configs. |
 | **Local Infrastructure** | **Implemented** | Docker Compose configuration running PostgreSQL, Redis, and MinIO. |
 | **API Shell** | **Implemented** | Minimal NestJS API workspace with a public `/health` check. |
-| **Web Shell** | **Implemented** | Next.js 14 workspace with routing placeholder and UI skeleton. |
+| **Web Shell** | **Phase 1 Started** | Next.js 14 operational dashboard shell for role-aware asset, booking, maintenance, audit, and activity views. |
 | **Worker Shell** | **Implemented** | NestJS application context worker with basic lifecycle logs. |
-| **Database Schema** | **Scaffolded** | Basic Prisma schema file connected to PostgreSQL (no business models defined yet). |
+| **Database Schema** | **Phase 1 Started** | Prisma schema now defines core tenant, identity, asset, allocation, booking, maintenance, audit, notification, activity-log, outbox, idempotency, and export job tables. |
 | **Module Packages** | **Scaffolded** | Subdirectory skeleton for `apps/api/src/modules/` containing README ownership files. |
-| **Shared Contracts** | **Scaffolded** | `@assetflow/contracts` for API boundary schemas (currently empty). |
-| **Domain Packages** | **Scaffolded** | `@assetflow/domain` containing basic definitions (no business models yet). |
-| **Queue Abstraction** | **Scaffolded** | `@assetflow/queue` wrapper (integration with BullMQ is planned). |
-| **Observability** | **Scaffolded** | `@assetflow/observability` workspace wrapper (integration with OpenTelemetry is planned). |
+| **Shared Contracts** | **Phase 1 Started** | `@assetflow/contracts` defines Zod schemas for high-value workflow commands and problem responses. |
+| **Domain Packages** | **Phase 1 Started** | `@assetflow/domain` defines domain state vectors, workflow states, transition guards, booking range rules, and command idempotency checks. |
+| **Queue Abstraction** | **Phase 1 Started** | `@assetflow/queue` defines queue, scheduler, retry, dead-letter, tenant, and correlation interfaces for workers. |
+| **Observability** | **Phase 1 Started** | `@assetflow/observability` defines structured logger and metrics ports with a console logger implementation. |
 | **Transactional Outbox** | **Planned** | Reliable async database-level event dispatching to background workers. |
 
 ## High-Level Architecture Summary

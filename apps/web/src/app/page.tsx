@@ -1,132 +1,208 @@
-/**
- * AssetFlow – Minimal shell page.
- *
- * This page is a scaffold placeholder. No business features are implemented here.
- * Feature pages are added inside src/features/ as each module is built.
- */
+const kpis = [
+  { label: "Available assets", value: "428", delta: "+18", tone: "good" },
+  { label: "Allocated assets", value: "1,284", delta: "76%", tone: "steady" },
+  { label: "Overdue returns", value: "23", delta: "+5", tone: "risk" },
+  { label: "Booking conflicts blocked", value: "41", delta: "30d", tone: "warn" },
+  { label: "Open maintenance", value: "62", delta: "14 urgent", tone: "risk" },
+  { label: "Audit completion", value: "87%", delta: "Q3 cycle", tone: "good" },
+];
+
+const workQueues = [
+  ["Returns awaiting inspection", "12", "Asset Manager"],
+  ["Transfer approvals", "9", "Department Head"],
+  ["Maintenance approvals", "17", "Asset Manager"],
+  ["Audit discrepancies", "31", "Auditor"],
+  ["Failed notification deliveries", "4", "Admin"],
+];
+
+const assets = [
+  ["AF-000184", "ThinkPad T16", "Allocated", "Priya Sharma", "Engineering", "2026-07-20"],
+  ["AF-000241", "Thermal camera", "Maintenance", "Warehouse B", "Facilities", "Action required"],
+  ["AF-000377", "Pool vehicle 02", "Reserved", "Fleet Desk", "Operations", "16:00"],
+  ["AF-000412", "Mac Studio", "Available", "IT Store", "Design", "Ready"],
+] as const;
+
+const bookings = [
+  ["War room 3", "09:00-10:30", "Audit kickoff", "Confirmed"],
+  ["Pool vehicle 02", "16:00-18:00", "Site visit", "Confirmed"],
+  ["Calibration bench", "13:00-14:00", "Repair check", "Blackout"],
+] as const;
+
+const activity = [
+  "Asset AF-000184 allocated with idempotency key recorded",
+  "Booking overlap rejected for Calibration bench",
+  "Audit item AF-000241 marked damaged by assigned auditor",
+  "Outbox published MaintenanceApproved event",
+];
+
+const roles = ["Admin", "Asset Manager", "Department Head", "Employee", "Auditor"];
+
 export default function HomePage() {
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "2rem",
-        fontFamily: "var(--font-body)",
-        background: "var(--color-bg)",
-      }}
-    >
-      {/* Status badge */}
-      <div
-        style={{
-          display: "inline-flex",
-          alignItems: "center",
-          gap: "0.5rem",
-          padding: "0.4rem 1rem",
-          borderRadius: "9999px",
-          border: "1px solid rgba(124,58,237,0.35)",
-          background: "rgba(124,58,237,0.1)",
-          color: "#a78bfa",
-          fontSize: "0.78rem",
-          fontWeight: 600,
-          letterSpacing: "0.06em",
-          textTransform: "uppercase",
-          marginBottom: "2rem",
-        }}
-      >
-        <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#a78bfa", display: "inline-block" }} />
-        Scaffold – No features implemented yet
-      </div>
-
-      {/* Heading */}
-      <h1
-        style={{
-          fontFamily: "var(--font-heading)",
-          fontSize: "clamp(2.4rem, 6vw, 4rem)",
-          fontWeight: 800,
-          letterSpacing: "-0.03em",
-          background: "linear-gradient(135deg, #fff 0%, #a78bfa 55%, #06b6d4 100%)",
-          WebkitBackgroundClip: "text",
-          WebkitTextFillColor: "transparent",
-          textAlign: "center",
-          marginBottom: "1.25rem",
-          lineHeight: 1.1,
-        }}
-      >
-        AssetFlow
-      </h1>
-
-      <p
-        style={{
-          color: "var(--color-text-secondary)",
-          fontSize: "1.125rem",
-          maxWidth: "520px",
-          textAlign: "center",
-          lineHeight: 1.65,
-          marginBottom: "3rem",
-        }}
-      >
-        Enterprise Asset &amp; Resource Management System. Multi-tenant platform
-        for physical assets, resource bookings, maintenance workflows, and audit cycles.
-      </p>
-
-      {/* Modules grid */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-          gap: "1rem",
-          width: "100%",
-          maxWidth: "780px",
-          marginBottom: "3rem",
-        }}
-      >
-        {[
-          "Identity & Access",
-          "Organization",
-          "Asset Registry",
-          "Allocation & Transfer",
-          "Resource Booking",
-          "Maintenance",
-          "Audit",
-          "Notifications",
-          "Reporting",
-          "Activity Log",
-        ].map((name) => (
-          <div
-            key={name}
-            style={{
-              background: "rgba(13,20,38,0.6)",
-              border: "1px solid rgba(255,255,255,0.07)",
-              borderRadius: "var(--radius)",
-              padding: "1rem 1.25rem",
-              fontSize: "0.875rem",
-              fontWeight: 500,
-              color: "var(--color-text-secondary)",
-              display: "flex",
-              alignItems: "center",
-              gap: "0.6rem",
-            }}
-          >
-            <span
-              style={{
-                width: 6,
-                height: 6,
-                borderRadius: "50%",
-                background: "rgba(124,58,237,0.5)",
-                flexShrink: 0,
-              }}
-            />
-            {name}
+    <main className="app-shell">
+      <aside className="sidebar" aria-label="Primary navigation">
+        <div className="brand-block">
+          <span className="brand-mark" aria-hidden="true">AF</span>
+          <div>
+            <p className="eyebrow">AssetFlow</p>
+            <h1>Operations Console</h1>
           </div>
-        ))}
-      </div>
+        </div>
 
-      <footer style={{ color: "var(--color-text-secondary)", fontSize: "0.78rem", opacity: 0.6 }}>
-        AssetFlow monorepo scaffold – infrastructure only, no business logic.
-      </footer>
+        <nav className="nav-list">
+          {["Dashboard", "Assets", "Allocations", "Bookings", "Maintenance", "Audits", "Reports"].map((item) => (
+            <a href={`#${item.toLowerCase()}`} key={item} className={item === "Dashboard" ? "active" : ""}>
+              {item}
+            </a>
+          ))}
+        </nav>
+
+        <section className="role-switcher" aria-label="Role views">
+          <p className="section-label">Role view</p>
+          <div className="segmented">
+            {roles.map((role, index) => (
+              <button key={role} className={index === 1 ? "selected" : ""} type="button">
+                {role}
+              </button>
+            ))}
+          </div>
+        </section>
+      </aside>
+
+      <section className="workspace">
+        <header className="topbar">
+          <div>
+            <p className="eyebrow">Tenant: Northwind Manufacturing</p>
+            <h2>Asset custody, bookings, maintenance, and audits</h2>
+          </div>
+          <div className="topbar-actions">
+            <button type="button">Scan</button>
+            <button type="button">New asset</button>
+            <button type="button" className="primary">Allocate</button>
+          </div>
+        </header>
+
+        <section className="kpi-grid" aria-label="Operational KPIs">
+          {kpis.map((kpi) => (
+            <article className={`metric ${kpi.tone}`} key={kpi.label}>
+              <p>{kpi.label}</p>
+              <strong>{kpi.value}</strong>
+              <span>{kpi.delta}</span>
+            </article>
+          ))}
+        </section>
+
+        <section className="split-layout">
+          <div className="panel" id="assets">
+            <div className="panel-heading">
+              <h3>Asset registry</h3>
+              <span>Fresh 2 min ago</span>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Tag</th>
+                  <th>Asset</th>
+                  <th>Status</th>
+                  <th>Holder</th>
+                  <th>Dept</th>
+                  <th>Next action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {assets.map(([tag, name, status, holder, dept, action]) => (
+                  <tr key={tag}>
+                    <td>{tag}</td>
+                    <td>{name}</td>
+                    <td><span className={`status ${status.toLowerCase()}`}>{status}</span></td>
+                    <td>{holder}</td>
+                    <td>{dept}</td>
+                    <td>{action}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="panel queue-panel">
+            <div className="panel-heading">
+              <h3>Work queues</h3>
+              <span>Scoped to role</span>
+            </div>
+            <div className="queue-list">
+              {workQueues.map(([label, count, owner]) => (
+                <button type="button" className="queue-row" key={label}>
+                  <span>{label}</span>
+                  <strong>{count}</strong>
+                  <em>{owner}</em>
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="three-column">
+          <div className="panel" id="bookings">
+            <div className="panel-heading">
+              <h3>Bookings today</h3>
+              <span>No overlaps</span>
+            </div>
+            {bookings.map(([resource, time, purpose, status]) => (
+              <div className="booking-row" key={`${resource}-${time}`}>
+                <time>{time}</time>
+                <div>
+                  <strong>{resource}</strong>
+                  <span>{purpose}</span>
+                </div>
+                <span className={`status ${status.toLowerCase()}`}>{status}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="panel" id="maintenance">
+            <div className="panel-heading">
+              <h3>Maintenance</h3>
+              <span>14 urgent</span>
+            </div>
+            <div className="stacked-stat">
+              <strong>8.4h</strong>
+              <span>Median approval time</span>
+            </div>
+            <div className="progress-track" aria-label="Maintenance SLA">
+              <span style={{ width: "68%" }} />
+            </div>
+            <p className="panel-note">Resource blackouts are attached before future bookings are flagged for action.</p>
+          </div>
+
+          <div className="panel" id="audits">
+            <div className="panel-heading">
+              <h3>Audit cycle</h3>
+              <span>Review</span>
+            </div>
+            <div className="audit-meter">
+              <strong>1,482</strong>
+              <span>snapshot items</span>
+            </div>
+            <div className="audit-results">
+              <span>Verified 1,289</span>
+              <span>Missing 19</span>
+              <span>Damaged 12</span>
+            </div>
+          </div>
+        </section>
+
+        <section className="panel activity-panel">
+          <div className="panel-heading">
+            <h3>Immutable activity</h3>
+            <span>Correlation IDs retained</span>
+          </div>
+          <ol>
+            {activity.map((entry) => (
+              <li key={entry}>{entry}</li>
+            ))}
+          </ol>
+        </section>
+      </section>
     </main>
   );
 }
